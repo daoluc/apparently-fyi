@@ -287,7 +287,7 @@ def main():
     csv_file = "webset-articles_cut_sea_cables.csv"
     
     processor = NewsArticleProcessor()
-    results = processor.process_articles_from_csv(csv_file, max_articles=20)
+    results = processor.process_articles_from_csv(csv_file, max_articles=10)
     
     if "error" in results:
         print(f"Error: {results['error']}")
