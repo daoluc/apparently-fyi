@@ -5,6 +5,7 @@ import {
 } from "@/server/api/trpc";
 import { getYearRange } from "./procedures/getYearRange";
 import { getWorldPopulationData } from "./procedures/getWorldPopulationData";
+import { getNarrativeArticleData } from "./procedures/getNarrativeArticleData";
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ import { getWorldPopulationData } from "./procedures/getWorldPopulationData";
 export const appRouter = createTRPCRouter({
   getYearRange,
   getWorldPopulationData,
+  getNarrativeArticleData,
 });
 
 // export type definition of API

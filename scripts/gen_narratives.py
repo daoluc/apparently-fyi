@@ -94,14 +94,14 @@ class NewsArticleProcessor:
         """Split the article content into meaningful units (paragraphs or sentences)."""
         # First split by paragraphs
         paragraphs = [p.strip() for p in text.split('\n') if p.strip()]
-        
+
         # Merge short paragraphs (less than 20 words) with the next paragraph
         merged_paragraphs = []
         i = 0
         while i < len(paragraphs):
             current_paragraph = paragraphs[i]
             word_count = len(current_paragraph.split())
-            
+
             # If current paragraph is too short and not the last one
             if word_count < 20 and i < len(paragraphs) - 1:
                 # Merge with the next paragraph
@@ -113,7 +113,7 @@ class NewsArticleProcessor:
                 # Keep the paragraph as is
                 merged_paragraphs.append(current_paragraph)
                 i += 1
-                
+
         # Replace original paragraphs with merged ones
         paragraphs = merged_paragraphs
 
@@ -202,17 +202,17 @@ class NewsArticleProcessor:
         try:
             # Read the CSV file
             df = pd.read_csv(csv_file)
-            
+
             # Limit to first max_articles
             df = df.head(max_articles)
-            
+
             # Extract full text from each article
             for index, row in df.iterrows():
                 article_title = row.get('Title', f"Article {index+1}")
                 article_text = row.get('Full Text of Article', '')
-                
+
                 logger.info(f"Processing article: {article_title}")
-                
+
                 if article_text:
                     # Split content into units
                     units = self.split_into_units(article_text)
@@ -220,25 +220,25 @@ class NewsArticleProcessor:
                     all_units.extend(units)
                 else:
                     logger.warning(f"No content found for article: {article_title}")
-            
+
             if not all_units:
                 return {"error": "No valid content extracted from any of the articles in the CSV"}
-                
+
             # Generate embeddings
             logger.info(f"Generating embeddings for {len(all_units)} text units")
             embeddings = self.generate_embeddings(all_units)
-            
+
             # Identify clusters
             logger.info("Identifying clusters")
             cluster_labels, num_clusters = self.identify_clusters(embeddings)
-            
+
             # Group units by cluster
             clusters = {}
             for i, label in enumerate(cluster_labels):
                 if label not in clusters:
                     clusters[label] = []
                 clusters[label].append(all_units[i])
-            
+
             # Generate narrative for each cluster
             logger.info(f"Generating narratives for {num_clusters} clusters")
             narratives = {}
@@ -249,13 +249,13 @@ class NewsArticleProcessor:
                     "sample_units": units[:5],  # Include a few sample units
                     "unit_count": len(units)
                 }
-            
+
             return {
                 "total_units": len(all_units),
                 "num_clusters": num_clusters,
                 "narratives": narratives
             }
-            
+
         except Exception as e:
             logger.error(f"Error processing CSV file: {e}")
             return {"error": f"Error processing CSV file: {str(e)}"}
@@ -266,29 +266,29 @@ class NewsArticleProcessor:
             with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['id', 'narrative']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                
+
                 writer.writeheader()
                 for cluster_id, data in narratives.items():
                     # Replace new lines with pipe character
                     narrative_text = data['narrative']
                     narrative_text = re.sub(r'\n+', '|', narrative_text)
-                    
+
                     writer.writerow({
                         'id': cluster_id,
                         'narrative': narrative_text
                     })
-                
+
             logger.info(f"Narratives saved to {output_file}")
         except Exception as e:
             logger.error(f"Error saving narratives to CSV: {e}")
 
 def main():
     # Use CSV file instead of URLs
-    csv_file = "webset-articles_cut_sea_cables.csv"
-    
+    csv_file = "articles2.csv"
+
     processor = NewsArticleProcessor()
     results = processor.process_articles_from_csv(csv_file, max_articles=10)
-    
+
     if "error" in results:
         print(f"Error: {results['error']}")
         return
@@ -303,7 +303,7 @@ def main():
         print("Sample text units:")
         for i, unit in enumerate(data['sample_units'], 1):
             print(f"  {i}. {unit[:100]}...")
-    
+
     # Save narratives to CSV
     processor.save_narratives_to_csv(results['narratives'])
 

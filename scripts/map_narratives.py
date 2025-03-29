@@ -40,7 +40,7 @@ class NarrativeMapper:
         try:
             df = pd.read_csv(articles_file)
             # Only load top 10 articles
-            df = df.head(10)
+            df = df.head(100)
             for index, row in df.iterrows():
                 article_id = index  # Using index as article ID
                 article_text = row.get('Full Text of Article', '')
@@ -139,7 +139,7 @@ class NarrativeMapper:
             logger.error(f"Error saving results to CSV: {e}")
 
 def main():
-    articles_file = "webset-articles_cut_sea_cables.csv"
+    articles_file = "articles2.csv"
     narratives_file = "narratives.csv"
     output_file = "narrative_article_mapping.csv"
     

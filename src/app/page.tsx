@@ -1,8 +1,7 @@
 "use client";
 
 import { WorldPopulationChart } from "@/components/WorldPopulationChart";
-import { ArticleDataProvider } from "@/components/ArticleDataProvider";
-import { ArticleSparkline } from "@/components/ArticleSparkline";
+import { NarrativeScatterChart } from "@/components/NarrativeScatterChart";
 
 export default function Home() {
   return (
@@ -19,23 +18,21 @@ export default function Home() {
           </div>
 
           {/* World Population Overview */}
-          <div className="mb-12">
+          {/* <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-4">World Population Overview</h2>
             <p className="text-gray-600 mb-6">
               The chart below shows the total world population growth over time.
             </p>
             <WorldPopulationChart />
-          </div>
+          </div> */}
 
           {/* Article Distribution */}
           <div className="mb-12">
             <h2 className="text-2xl font-semibold mb-4">Article Distribution</h2>
             <p className="text-gray-600 mb-6">
-              Distribution of articles over time.
+              Distribution of articles over time showing agreement scores across different media sources.
             </p>
-            <ArticleDataProvider>
-              <ArticleSparkline />
-            </ArticleDataProvider>
+            <NarrativeScatterChart />
           </div>
         </div>
       </div>
