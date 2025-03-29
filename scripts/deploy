@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+cd `dirname $0`
+cd .. # to get out of `scripts` directory
+
+SSH_HOST=root@apparently.fyi
+
+ssh "$SSH_HOST" "systemctl stop defense" || true
+rsync -v -a --delete-after --delete-excluded --exclude='node_modules' --exclude='.git' --exclude='dist' --exclude='.next' --exclude='node_modules' --exclude='*.env' --exclude=".turbo" ./ "$SSH_HOST":defense/
+scp ./prod.env "$SSH_HOST":defense/.env
+ssh "$SSH_HOST" "
+  echo '
+    [Unit]
+    Description=defense
+    After=docker.service
+    Requires=docker.service
+
+    [Service]
+    Type=oneshot
+    WorkingDirectory=/root/defense
+    Environment=PATH=/root/.local/share/pnpm:$PATH
+    ExecStart=npx codapt start
+    ExecStop=/usr/bin/docker stop defense
+    RemainAfterExit=yes
+
+    [Install]
+    WantedBy=multi-user.target
+  ' > /etc/systemd/system/defense.service
+  systemctl daemon-reload
+  systemctl enable defense
+  systemctl start defense
+"
+
+echo 'TEMP: tailing defense logs'
+ssh "$SSH_HOST" "docker logs -n 300 -f defense"

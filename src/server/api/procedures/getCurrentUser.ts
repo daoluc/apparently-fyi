@@ -1,0 +1,1 @@
+// This file should be deleted as part of removing authentication functionality

@@ -1,0 +1,2 @@
+// This file is being deleted as part of the simplification to focus exclusively on world population data.
+// The PopulationFilters component is no longer needed as we're removing all country and region-specific filtering functionality.
