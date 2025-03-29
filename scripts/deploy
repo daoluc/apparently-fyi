@@ -7,7 +7,7 @@ cd .. # to get out of `scripts` directory
 SSH_HOST=root@apparently.fyi
 
 ssh "$SSH_HOST" "systemctl stop defense" || true
-rsync -v -a --delete-after --delete-excluded --exclude='node_modules' --exclude='.git' --exclude='dist' --exclude='.next' --exclude='node_modules' --exclude='*.env' --exclude=".turbo" ./ "$SSH_HOST":defense/
+rsync -v -a --delete-after --delete-excluded --exclude='node_modules' --exclude='.git' --exclude='dist' --exclude='.next' --exclude='node_modules' --exclude='scripts' --exclude='*.env' --exclude=".turbo" ./ "$SSH_HOST":defense/
 scp ./prod.env "$SSH_HOST":defense/.env
 ssh "$SSH_HOST" "
   echo '
