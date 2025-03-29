@@ -1,12 +1,14 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
 import numpy as np
+from datetime import datetime
+from bokeh.plotting import figure
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem
+from bokeh.palettes import Category20
+from bokeh.transform import factor_cmap
 
 # Set page title
-st.title("Sea Cable Media Narrative")
+st.title("Sea Cable Cutting Narratives")
 
 # Load the data
 @st.cache_data
@@ -47,48 +49,80 @@ for narrative_id in narrative_ids:
         st.write(f"**Description:** {formatted_description}")
     
     # Get unique media locations for this narrative
-    media_locations = narrative_data['Media Location'].unique()
+    media_locations = narrative_data['Media Location'].unique().tolist()
     
-    # Create a color map for media locations
-    color_map = {}
-    colors = plt.cm.tab20.colors
-    for i, location in enumerate(media_locations):
-        color_map[location] = colors[i % len(colors)]
-    
-    # Create the figure
-    fig, ax = plt.subplots(figsize=(12, 6))
-    
-    # Plot each media location with a different color
-    for location in media_locations:
-        location_data = narrative_data[narrative_data['Media Location'] == location]
-        ax.scatter(
-            location_data['Published Date'], 
-            location_data['agreement_score'],
-            label=location,
-            alpha=0.7,
-            s=100,
-            color=color_map[location]
-        )
-    
-    # Set plot labels and title
-    ax.set_xlabel('Published Date')
-    ax.set_ylabel('Agreement Score')
-    ax.set_title(f'Agreement Score by Published Date for Narrative {narrative_id}')
-    
-    # Format x-axis to show dates nicely
-    fig.autofmt_xdate()
+    # Create a Bokeh figure with increased size
+    p = figure(
+        title=f'Agreement Score by Published Date for Narrative {narrative_id}',
+        x_axis_label='Published Date',
+        y_axis_label='Agreement Score',
+        x_axis_type='datetime',
+        width=2000,  
+        height=600, 
+        tools="pan,wheel_zoom,box_zoom,reset,save",
+        toolbar_location="above"
+    )
     
     # Add a horizontal line at y=0 for reference
-    ax.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+    p.line(
+        x=[narrative_data['Published Date'].min(), narrative_data['Published Date'].max()],
+        y=[0, 0],
+        line_color='gray',
+        line_dash='dashed',
+        line_alpha=0.5
+    )
     
-    # Add legend with smaller font size to accommodate many media locations
+    # Create a color palette for the media locations
+    colors = Category20[20]
+    color_map = {location: colors[i % len(colors)] for i, location in enumerate(media_locations)}
+    
+    # Create a hover tool
+    hover = HoverTool(
+        tooltips=[
+            ("Title", "@Title"),
+            ("Media Location", "@Media_Location"),
+            ("Published Date", "@Published_Date{%F}"),
+            ("Agreement Score", "@agreement_score")
+        ],
+        formatters={"@Published_Date": "datetime"}
+    )
+    p.add_tools(hover)
+    
+    # Plot each media location with a different color
+    legend_items = []
+    for location in media_locations:
+        location_data = narrative_data[narrative_data['Media Location'] == location]
+        source = ColumnDataSource(data={
+            'Published_Date': location_data['Published Date'],
+            'agreement_score': location_data['agreement_score'],
+            'Title': location_data['Title'],
+            'Media_Location': location_data['Media Location']
+        })
+        
+        circle = p.circle(
+            x='Published_Date',
+            y='agreement_score',
+            source=source,
+            size=12,  # Increased point size from 10 to 12
+            color=color_map[location],
+            alpha=0.7
+        )
+        
+        legend_items.append((location, [circle]))
+    
+    # Add legend
     if len(media_locations) > 10:
-        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize='small')
+        # For many locations, place legend outside the plot
+        p.add_layout(Legend(items=legend_items, location="center_right"), 'right')
+        p.legend.click_policy = "hide"  # Make legend interactive
     else:
-        ax.legend(loc='best')
+        # For fewer locations, place legend inside the plot
+        legend = Legend(items=legend_items)
+        legend.click_policy = "hide"  # Make legend interactive
+        p.add_layout(legend, 'right')
     
     # Show the plot in Streamlit
-    st.pyplot(fig)
+    st.bokeh_chart(p, use_container_width=True)
     
     # Add some statistics about the narrative
     st.write(f"Average agreement score: {narrative_data['agreement_score'].mean():.2f}")
